@@ -1,11 +1,5 @@
 env: "local" # local, dev, prod
-auth:
-  http_server:
+http_server:
     address: "localhost:8081"
-    timeout: 4s
-    idle_timeout: 60s
-events:
-  http_server:
-    address: "localhost:8080"
     timeout: 4s
     idle_timeout: 60s

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"project/internal/auth/service"
+	"project/internal/platform/token"
 	"sync/atomic"
 	"time"
 
@@ -17,23 +18,37 @@ import (
 type app interface {
 	Register(ctx context.Context, req service.RegisterParams) (service.RegisterResult, error)
 	Login(ctx context.Context, req service.LoginParams) (service.LoginResult, error)
+	Logout(ctx context.Context, req service.LogoutParams) error
+}
+
+type blackList interface {
+	IsRevoked(ctx context.Context, tokenID string) (bool, error)
+}
+
+type tokenParser interface {
+	ParseAccessToken(tokenString string) (token.Info, error)
 }
 
 type Server struct {
-	router   *chi.Mux
-	addr     string
-	app      app
-	validate *validator.Validate
-	ready    atomic.Bool
+	router    *chi.Mux
+	addr      string
+	app       app
+	validate  *validator.Validate
+	ready     atomic.Bool
+	token     tokenParser
+	blacklist blackList
 }
 
 type Params struct {
-	Addr string
-	App  app
+	Addr      string
+	App       app
+	Token     tokenParser
+	Blacklist blackList
 }
 
 func New(p Params) *Server {
-	s := &Server{router: chi.NewRouter(), addr: p.Addr, app: p.App, validate: validator.New()}
+	s := &Server{router: chi.NewRouter(), addr: p.Addr, app: p.App, validate: validator.New(),
+		token: p.Token, blacklist: p.Blacklist}
 
 	s.router.Use(middleware.RequestID)
 	s.router.Use(middleware.RealIP)
@@ -42,6 +57,15 @@ func New(p Params) *Server {
 	s.router.Route("/api/v1/auth", func(r chi.Router) {
 		r.Post("/register", s.handleRegister)
 		r.Post("/login", s.handleLogin)
+
+		r.Group(func(r chi.Router) {
+			r.Use(Auth(
+				s.token,
+				s.blacklist,
+			))
+
+			r.Post("/logout", s.handleLogout)
+		})
 	})
 	return s
 }

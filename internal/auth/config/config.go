@@ -9,14 +9,11 @@ import (
 )
 
 type Config struct {
-	Env      string `yaml:"env" env-default:"local"`
-	Auth     Auth   `yaml:"auth"`
-	Database Database
-}
-
-type Auth struct {
+	Env        string     `yaml:"env" env-default:"local"`
 	HTTPServer HTTPServer `yaml:"http_server"`
 	JWT        JWT
+	Database   Database
+	Redis      Redis
 }
 
 type HTTPServer struct {
@@ -31,6 +28,10 @@ type JWT struct {
 
 type Database struct {
 	URL string `env:"AUTH_DB_URL" env-required:"true"`
+}
+
+type Redis struct {
+	URL string `env:"REDIS_URL" env-required:"true"`
 }
 
 func MustLoad() *Config {
