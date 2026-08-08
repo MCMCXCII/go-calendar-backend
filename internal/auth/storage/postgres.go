@@ -56,6 +56,11 @@ func (s *Store) Ready(ctx context.Context) error {
 	return nil
 }
 
+func (s *Store) Close() error {
+	//реализовать
+	return nil
+}
+
 func (s *Store) CreateUser(ctx context.Context, user domain.User) error {
 	if _, err := s.pool.Exec(ctx,
 		`INSERT INTO users(id, email, password_hash) VALUES($1, $2, $3)`,

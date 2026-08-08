@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"project/internal/auth/domain"
 	"project/internal/auth/service"
+	"project/internal/platform/token"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -135,4 +136,21 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "failed to encode response", http.StatusInternalServerError)
 		return
 	}
+}
+
+func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
+	tokenInfo, ok := r.Context().Value(tokenInfoContextKey{}).(token.Info)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	err := s.app.Logout(r.Context(), service.LogoutParams{TokenID: tokenInfo.TokenID,
+		ExpiresAt: tokenInfo.ExpiresAt})
+	if err != nil {
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

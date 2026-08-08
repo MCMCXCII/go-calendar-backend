@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"project/internal/auth/domain"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -16,20 +17,31 @@ type store interface {
 	GetUser(ctx context.Context, email string) (user domain.User, err error)
 }
 
+type blacklist interface {
+	Revoke(ctx context.Context, tokenID string, ttl time.Duration) error
+}
+
+type tokenBuilder interface {
+	BuildAccessToken(userID uuid.UUID) (string, error)
+}
+
 type Service struct {
 	store     store
-	jwtSecret string
+	blacklist blacklist
+	token     tokenBuilder
 }
 
 type Params struct {
 	Store     store
-	JWTSecret string
+	Token     tokenBuilder
+	Blacklist blacklist
 }
 
 func New(p Params) *Service {
 	return &Service{
 		store:     p.Store,
-		jwtSecret: p.JWTSecret,
+		token:     p.Token,
+		blacklist: p.Blacklist,
 	}
 }
 
@@ -105,10 +117,7 @@ func (s *Service) Login(ctx context.Context, req LoginParams) (LoginResult, erro
 		return LoginResult{}, fmt.Errorf("compare password: %w", err)
 	}
 
-	accessToken, err := buildAccessToken(
-		user.ID,
-		s.jwtSecret,
-	)
+	accessToken, err := s.token.BuildAccessToken(user.ID)
 	if err != nil {
 		return LoginResult{}, err
 	}
@@ -116,4 +125,21 @@ func (s *Service) Login(ctx context.Context, req LoginParams) (LoginResult, erro
 	return LoginResult{
 		AccessToken: accessToken,
 	}, nil
+}
+
+type LogoutParams struct {
+	TokenID   string
+	ExpiresAt time.Time
+}
+
+func (s *Service) Logout(ctx context.Context, p LogoutParams) error {
+	ttl := time.Until(p.ExpiresAt)
+	if ttl <= 0 {
+		return fmt.Errorf("invalid token")
+	}
+
+	if err := s.blacklist.Revoke(ctx, p.TokenID, ttl); err != nil {
+		return fmt.Errorf("revoke access token: %w", err)
+	}
+	return nil
 }

@@ -8,4 +8,5 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 
 	ErrJWTSecretEmpty = errors.New("JWT secret is empty")
+	ErrInvalidToken   = errors.New("invalid token")
 )
