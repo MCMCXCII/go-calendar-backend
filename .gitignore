@@ -6,8 +6,6 @@
 # Скомпилированные бинарники
 /bin/
 /out/
-events
-auth
 *.exe
 
 # Go
