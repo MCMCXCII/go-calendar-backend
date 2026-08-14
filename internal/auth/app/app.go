@@ -8,17 +8,20 @@ import (
 	"project/internal/auth/storage"
 	"project/internal/auth/transport/httpserver"
 	"project/internal/platform/blacklist"
+	"project/internal/platform/postgres"
 	"project/internal/platform/redis"
 	"project/internal/platform/token"
 )
 
 func Run(ctx context.Context) error {
 	cfg := config.MustLoad()
-	userStorage, err := storage.New(ctx, storage.Params{URL: cfg.Database.URL})
+	db, err := postgres.New(ctx, postgres.Params{URL: cfg.Database.URL})
 	if err != nil {
-		return fmt.Errorf("error connection to postgres: %w", err)
+		return fmt.Errorf("connect to postgres: %w", err)
 	}
-	defer userStorage.Close()
+	defer db.Close()
+
+	userStorage := storage.New(storage.Params{Pool: db.Pool()})
 
 	redisClient, err := redis.New(ctx, redis.Params{URL: cfg.Redis.URL})
 	if err != nil {
@@ -29,7 +32,13 @@ func Run(ctx context.Context) error {
 	tokenManager := token.New(token.Params{Secret: cfg.JWT.SecretKey})
 	blackListManager := blacklist.New(blacklist.Params{Client: redisClient.Client()})
 
-	authService := service.New(service.Params{Store: userStorage, Token: tokenManager, Blacklist: blackListManager})
+	authService := service.New(service.Params{
+		Store:           userStorage,
+		Token:           tokenManager,
+		Blacklist:       blackListManager,
+		TokenExpiration: cfg.JWTExpiration,
+	})
+
 	server := httpserver.New(httpserver.Params{
 		Addr:      cfg.HTTPServer.Address,
 		App:       authService,

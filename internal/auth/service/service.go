@@ -22,26 +22,29 @@ type blacklist interface {
 }
 
 type tokenBuilder interface {
-	BuildAccessToken(userID uuid.UUID) (string, error)
+	BuildAccessToken(userID uuid.UUID, expiration time.Duration) (string, error)
 }
 
 type Service struct {
-	store     store
-	blacklist blacklist
-	token     tokenBuilder
+	store           store
+	blacklist       blacklist
+	token           tokenBuilder
+	tokenExpiration time.Duration
 }
 
 type Params struct {
-	Store     store
-	Token     tokenBuilder
-	Blacklist blacklist
+	Store           store
+	Token           tokenBuilder
+	Blacklist       blacklist
+	TokenExpiration time.Duration
 }
 
 func New(p Params) *Service {
 	return &Service{
-		store:     p.Store,
-		token:     p.Token,
-		blacklist: p.Blacklist,
+		store:           p.Store,
+		token:           p.Token,
+		blacklist:       p.Blacklist,
+		tokenExpiration: p.TokenExpiration,
 	}
 }
 
@@ -89,8 +92,7 @@ type LoginParams struct {
 }
 
 type LoginResult struct {
-	AccessToken  string
-	RefreshToken string
+	AccessToken string
 }
 
 func (s *Service) Login(ctx context.Context, req LoginParams) (LoginResult, error) {
@@ -105,7 +107,6 @@ func (s *Service) Login(ctx context.Context, req LoginParams) (LoginResult, erro
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return LoginResult{}, ErrInvalidCredentials
 		}
-
 		return LoginResult{}, fmt.Errorf("get user: %w", err)
 	}
 
@@ -113,18 +114,15 @@ func (s *Service) Login(ctx context.Context, req LoginParams) (LoginResult, erro
 		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
 			return LoginResult{}, ErrInvalidCredentials
 		}
-
 		return LoginResult{}, fmt.Errorf("compare password: %w", err)
 	}
 
-	accessToken, err := s.token.BuildAccessToken(user.ID)
+	accessToken, err := s.token.BuildAccessToken(user.ID, s.tokenExpiration)
 	if err != nil {
-		return LoginResult{}, err
+		return LoginResult{}, fmt.Errorf("build access token: %w", err)
 	}
 
-	return LoginResult{
-		AccessToken: accessToken,
-	}, nil
+	return LoginResult{AccessToken: accessToken}, nil
 }
 
 type LogoutParams struct {
@@ -133,6 +131,10 @@ type LogoutParams struct {
 }
 
 func (s *Service) Logout(ctx context.Context, p LogoutParams) error {
+	if p.TokenID == "" {
+		return errors.New("token id is empty")
+	}
+
 	ttl := time.Until(p.ExpiresAt)
 	if ttl <= 0 {
 		return fmt.Errorf("invalid token")
