@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"project/internal/auth/domain"
-	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -17,48 +16,11 @@ type Store struct {
 }
 
 type Params struct {
-	URL string
+	Pool *pgxpool.Pool
 }
 
-func New(ctx context.Context, p Params) (*Store, error) {
-	if p.URL == "" {
-		return nil, ErrDatabaseUrlEmpty
-	}
-
-	pool, err := pgxpool.New(ctx, p.URL)
-	if err != nil {
-		return nil, fmt.Errorf("error create pool: %w", err)
-	}
-
-	store := &Store{
-		pool: pool,
-	}
-
-	if err := store.Ready(ctx); err != nil {
-		pool.Close()
-		return nil, err
-	}
-	return store, nil
-}
-
-func (s *Store) Ready(ctx context.Context) error {
-	if s.pool == nil {
-		return ErrDatabaseNotReady
-	}
-
-	pingCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
-	if err := s.pool.Ping(pingCtx); err != nil {
-		return fmt.Errorf("database ping error: %w", err)
-	}
-
-	return nil
-}
-
-func (s *Store) Close() error {
-	//реализовать
-	return nil
+func New(p Params) *Store {
+	return &Store{pool: p.Pool}
 }
 
 func (s *Store) CreateUser(ctx context.Context, user domain.User) error {

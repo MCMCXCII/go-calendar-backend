@@ -1,0 +1,25 @@
+# Секреты и окружение
+.env
+*.env
+!.env.example
+
+# Скомпилированные бинарники
+/bin/
+/out/
+events
+auth
+*.exe
+
+# Go
+vendor/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Логи
+*.log

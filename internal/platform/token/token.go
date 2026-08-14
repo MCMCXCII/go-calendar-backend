@@ -30,7 +30,7 @@ type Info struct {
 	ExpiresAt time.Time
 }
 
-func (t *Token) BuildAccessToken(userID uuid.UUID) (string, error) {
+func (t *Token) BuildAccessToken(userID uuid.UUID, expirations time.Duration) (string, error) {
 	now := time.Now().UTC()
 
 	claims := claims{
@@ -38,13 +38,13 @@ func (t *Token) BuildAccessToken(userID uuid.UUID) (string, error) {
 			Subject:   userID.String(),
 			ID:        uuid.NewString(),
 			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(2 * time.Minute)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(expirations)),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	signedToken, err := token.SignedString([]byte(t.secret))
+	signedToken, err := token.SignedString(t.secret)
 	if err != nil {
 		return "", fmt.Errorf("sign token: %w", err)
 	}

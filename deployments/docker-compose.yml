@@ -1,20 +1,110 @@
 services:
   auth_db:
-    image: postgres:14.18
-    restart: unless-stopped
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${AUTH_DB_USER}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+    ports:
+      - "5434:5432"
     volumes:
       - auth_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${AUTH_DB_USER} -d ${AUTH_DB_NAME}"]
       interval: 5s
-      timeout: 5s
-      retries: 5
+      timeout: 3s
+      retries: 10
+
+  events_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${EVENTS_DB_USER}
+      POSTGRES_PASSWORD: ${EVENTS_DB_PASSWORD}
+      POSTGRES_DB: ${EVENTS_DB_NAME}
     ports:
-      - "5434:5432"
+      - "5435:5432"
+    volumes:
+      - events_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${EVENTS_DB_USER} -d ${EVENTS_DB_NAME}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  auth_migrate:
+    image: migrate/migrate:v4.17.1
+    volumes:
+      - ../migrations/auth:/migrations
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth_db:5432/${AUTH_DB_NAME}?sslmode=disable"
+      - "up"
+    depends_on:
+      auth_db:
+        condition: service_healthy
+
+  events_migrate:
+    image: migrate/migrate:v4.17.1
+    volumes:
+      - ../migrations/events:/migrations
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://${EVENTS_DB_USER}:${EVENTS_DB_PASSWORD}@events_db:5432/${EVENTS_DB_NAME}?sslmode=disable"
+      - "up"
+    depends_on:
+      events_db:
+        condition: service_healthy
+
+  auth-service:
+    build:
+      context: ..
+      dockerfile: deployments/auth/Dockerfile
+    environment:
+      HTTP_ADDRESS: "0.0.0.0:8081"
+      AUTH_DB_URL: "postgres://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth_db:5432/${AUTH_DB_NAME}?sslmode=disable"
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      REDIS_URL: "redis://redis:6379/0"
+    ports:
+      - "8081:8081"
+    depends_on:
+      auth_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth_migrate:
+        condition: service_completed_successfully
+
+  events-service:
+    build:
+      context: ..
+      dockerfile: deployments/events/Dockerfile
+    environment:
+      HTTP_ADDRESS: "0.0.0.0:8080"
+      EVENTS_DB_URL: "postgres://${EVENTS_DB_USER}:${EVENTS_DB_PASSWORD}@events_db:5432/${EVENTS_DB_NAME}?sslmode=disable"
+      JWT_SECRET: ${JWT_SECRET}
+      REDIS_URL: "redis://redis:6379/1"
+      CACHE_TTL: ${CACHE_TTL}
+    ports:
+      - "8080:8080"
+    depends_on:
+      events_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      events_migrate:
+        condition: service_completed_successfully
 
 volumes:
   auth_db_data:
+  events_db_data:
