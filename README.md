@@ -1,9 +1,17 @@
 # go-calendar-backend
 
-Backend для календаря на Go: два независимых микросервиса — аутентификация и события, с общей авторизацией через JWT.
+# Chronos
+Backend календаря на микросервисной архитектуре. Два независимых сервиса — аутентификация и события — с общей JWT-авторизацией, Redis-кэшированием и изоляцией данных на уровне БД.
 
 ## Стек
-Go 1.25 · chi · PostgreSQL (pgx) · Redis · golang-migrate · JWT · bcrypt · Docker Compose
+- Go 1.25 
+- chi 
+- PostgreSQL 
+- Redis 
+- golang-migrate 
+- JWT 
+- bcrypt 
+- Docker Compose
 
 ## Архитектура
 - **auth-service** (`:8081`) — регистрация, логин, logout, своя БД
@@ -15,17 +23,6 @@ Go 1.25 · chi · PostgreSQL (pgx) · Redis · golang-migrate · JWT · bcrypt �
 
 ```bash
 cd deployments
-cp .env.example .env
 docker compose up --build
 ```
 
-## API
-
-**Auth** — `/api/v1/auth`: `POST /register`, `POST /login`, `POST /logout`, `GET /me`
-
-**Events** — `/api/v1/events` (требует `Authorization: Bearer <token>`):
-`POST /`, `GET /?day=YYYY-MM-DD|week=YYYY-Www|month=YYYY-MM`, `GET/{id}`, `PUT /{id}`, `DELETE /{id}`
-
-## Тестирование
-
-Коллекция Postman — в `postman/`.
