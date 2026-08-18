@@ -3,51 +3,74 @@ package app
 import (
 	"context"
 	"fmt"
-	"project/internal/auth/config"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
+
+	config "project/config/auth"
+	storage "project/internal/auth/adapter/postgres"
+	"project/internal/auth/controller/http"
 	"project/internal/auth/service"
-	"project/internal/auth/storage"
-	"project/internal/auth/transport/httpserver"
-	"project/internal/platform/blacklist"
-	"project/internal/platform/postgres"
-	"project/internal/platform/redis"
-	"project/internal/platform/token"
+
+	"project/pkg/blacklist"
+	"project/pkg/httpserver"
+	"project/pkg/postgres"
+	"project/pkg/redis"
+	"project/pkg/token"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func Run(ctx context.Context) error {
-	cfg := config.MustLoad()
-	db, err := postgres.New(ctx, postgres.Params{URL: cfg.Database.URL})
+	cfg, err := config.New()
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
+	pgPool, err := postgres.New(ctx, cfg.Postgres)
 	if err != nil {
 		return fmt.Errorf("connect to postgres: %w", err)
 	}
-	defer db.Close()
 
-	userStorage := storage.New(storage.Params{Pool: db.Pool()})
+	userStorage := storage.New(pgPool.Pool)
 
-	redisClient, err := redis.New(ctx, redis.Params{URL: cfg.Redis.URL})
+	redisClient, err := redis.New(ctx, cfg.Redis)
 	if err != nil {
 		return fmt.Errorf("error connection to redis: %w", err)
 	}
-	defer redisClient.Close()
 
-	tokenManager := token.New(token.Params{Secret: cfg.JWT.SecretKey})
-	blackListManager := blacklist.New(blacklist.Params{Client: redisClient.Client()})
+	tokenManager := token.New(cfg.Token)
+	blackListManager := blacklist.New(redisClient.Client)
 
 	authService := service.New(service.Params{
 		Store:           userStorage,
 		Token:           tokenManager,
 		Blacklist:       blackListManager,
-		TokenExpiration: cfg.JWTExpiration,
+		TokenExpiration: cfg.Expiration,
 	})
 
-	server := httpserver.New(httpserver.Params{
-		Addr:      cfg.HTTPServer.Address,
-		App:       authService,
-		Token:     tokenManager,
-		Blacklist: blackListManager,
-	},
-	)
-	if err := server.Run(ctx); err != nil {
-		return fmt.Errorf("error run HTTP server: %w", err)
-	}
+	r := chi.NewRouter()
+	http.AuthRouter(r, authService, tokenManager, blackListManager)
+	httpServer := httpserver.New(r, cfg.HTTP)
+
+	slog.Info("App started!")
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+	<-sig // wait signal
+
+	slog.Info("App got signal to stop")
+
+	// Controllers close
+	httpServer.Close()
+
+	// Adapters close
+	redisClient.Close()
+	pgPool.Close()
+
+	slog.Info("App stopped!")
+
 	return nil
 }

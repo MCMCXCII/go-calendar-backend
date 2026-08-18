@@ -44,7 +44,7 @@ services:
   auth_migrate:
     image: migrate/migrate:v4.17.1
     volumes:
-      - ../migrations/auth:/migrations
+      - ../migrations/postgres/auth:/migrations
     command:
       - "-path=/migrations"
       - "-database=postgres://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth_db:5432/${AUTH_DB_NAME}?sslmode=disable"
@@ -56,7 +56,7 @@ services:
   events_migrate:
     image: migrate/migrate:v4.17.1
     volumes:
-      - ../migrations/events:/migrations
+      - ../migrations/postgres/events:/migrations
     command:
       - "-path=/migrations"
       - "-database=postgres://${EVENTS_DB_USER}:${EVENTS_DB_PASSWORD}@events_db:5432/${EVENTS_DB_NAME}?sslmode=disable"
@@ -70,7 +70,7 @@ services:
       context: ..
       dockerfile: deployments/auth/Dockerfile
     environment:
-      HTTP_ADDRESS: "0.0.0.0:8081"
+      HTTP_ADDRESS: ${AUTH_HTTP_ADDRESS}
       AUTH_DB_URL: "postgres://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth_db:5432/${AUTH_DB_NAME}?sslmode=disable"
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
@@ -90,7 +90,7 @@ services:
       context: ..
       dockerfile: deployments/events/Dockerfile
     environment:
-      HTTP_ADDRESS: "0.0.0.0:8080"
+      HTTP_ADDRESS: ${EVENTS_HTTP_ADDRESS}
       EVENTS_DB_URL: "postgres://${EVENTS_DB_USER}:${EVENTS_DB_PASSWORD}@events_db:5432/${EVENTS_DB_NAME}?sslmode=disable"
       JWT_SECRET: ${JWT_SECRET}
       REDIS_URL: "redis://redis:6379/1"
