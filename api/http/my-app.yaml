@@ -1,0 +1,461 @@
+openapi: 3.0.3
+info:
+  title: go-calendar-backend API
+  description: >
+    API календаря событий на основе двух независимых микросервисов —
+    сервиса аутентификации и сервиса событий.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8081
+    description: auth-service (локально)
+  - url: http://localhost:8080
+    description: events-service (локально)
+
+tags:
+  - name: auth
+    description: Регистрация, вход, выход
+  - name: events
+    description: Управление событиями календаря
+
+security: []
+
+paths:
+
+  /api/v1/auth/register:
+    post:
+      tags: [auth]
+      summary: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Невалидные данные (пустой email/пароль, некорректный формат)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Пользователь с таким email уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/auth/login:
+    post:
+      tags: [auth]
+      summary: Вход, получение JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Невалидные данные запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неверный email или пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/auth/logout:
+    post:
+      tags: [auth]
+      summary: Выход, отзыв текущего токена
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Токен успешно отозван
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  /api/v1/events/:
+    post:
+      tags: [events]
+      summary: Создать событие
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Событие создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateEventResponse'
+        '400':
+          description: Невалидные данные (пустой title, неверный type, start_time >= end_time)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags: [events]
+      summary: Список событий за период
+      description: >
+        Ровно один из параметров day/week/month, либо оба from и to.
+        Если заданы from и to — остальные параметры игнорируются.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: day
+          in: query
+          description: "Формат: YYYY-MM-DD"
+          schema:
+            type: string
+          example: "2026-04-15"
+        - name: week
+          in: query
+          description: "Формат ISO-недели: YYYY-Www"
+          schema:
+            type: string
+          example: "2026-W16"
+        - name: month
+          in: query
+          description: "Формат: YYYY-MM"
+          schema:
+            type: string
+          example: "2026-04"
+        - name: from
+          in: query
+          description: "RFC3339, начало произвольного интервала"
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: "RFC3339, конец произвольного интервала"
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Список событий
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEventsResponse'
+        '400':
+          description: Не задан ни один параметр фильтрации, либо параметр невалиден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/events/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: UUID события
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [events]
+      summary: Получить событие по ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Событие найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+        '400':
+          description: Невалидный формат ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [events]
+      summary: Обновить событие
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEventRequest'
+      responses:
+        '200':
+          description: Событие обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Невалидные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [events]
+      summary: Удалить событие
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Событие удалено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Невалидный формат ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Access-токен, полученный через /api/v1/auth/login.
+        Передаётся в заголовке: Authorization: Bearer <token>
+
+  responses:
+    Unauthorized:
+      description: Токен отсутствует, невалиден, истёк или отозван
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Ресурс не найден (либо не существует, либо принадлежит другому пользователю)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Внутренняя ошибка сервера
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "invalid request"
+      required: [error]
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 72
+          example: "password123"
+      required: [email, password]
+
+    RegisterResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        message:
+          type: string
+          example: "registered"
+      required: [user_id, message]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      required: [access_token]
+
+    EventType:
+      type: string
+      enum: [meeting, task, reminder, other]
+
+    CreateEventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Совещание"
+        type:
+          $ref: '#/components/schemas/EventType'
+        custom_type:
+          type: string
+          description: Обязателен, если type == "other"; иначе должен быть пуст
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+      required: [title, type, start_time, end_time]
+
+    UpdateEventRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateEventRequest'
+
+    CreateEventResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        message:
+          type: string
+          example: "created"
+      required: [id, message]
+
+    EventResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        type:
+          $ref: '#/components/schemas/EventType'
+        custom_type:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - type
+        - start_time
+        - end_time
+        - created_at
+        - updated_at
+
+    ListEventsResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventResponse'
+      required: [events]
