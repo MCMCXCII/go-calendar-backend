@@ -35,11 +35,11 @@ func (v *V1) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req UpdateEventRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid request body"})
 		return
 	}
-	if err := v.validate.Struct(req); err != nil {
+	if err = v.validate.Struct(req); err != nil {
 		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		return
 	}

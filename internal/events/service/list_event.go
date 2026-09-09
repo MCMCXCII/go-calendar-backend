@@ -3,12 +3,13 @@ package service
 import (
 	"context"
 	"fmt"
-	"project/internal/events/domain"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+
+	"project/internal/events/domain"
 )
 
 type ListEventsParams struct {

@@ -3,9 +3,10 @@ package v1
 import (
 	"encoding/json"
 	"net/http"
-	"project/internal/auth/service"
 
 	"github.com/google/uuid"
+
+	"project/internal/auth/service"
 )
 
 type RegisterRequest struct {

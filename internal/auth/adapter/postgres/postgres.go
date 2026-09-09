@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"project/internal/auth/domain"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"project/internal/auth/domain"
 )
 
 type Store struct {
