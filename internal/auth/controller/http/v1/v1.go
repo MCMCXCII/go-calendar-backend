@@ -7,10 +7,10 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
+
 	"project/internal/auth/domain"
 	"project/internal/auth/service"
-
-	"github.com/go-playground/validator/v10"
 )
 
 type app interface {

@@ -3,9 +3,12 @@ package service
 import (
 	"context"
 	"project/internal/events/domain"
+	"time"
 
 	"github.com/google/uuid"
 )
+
+//go:generate mockgen -source=service.go -destination=./mocks/mocks.go -package=mocks
 
 type store interface {
 	CreateEvent(ctx context.Context, e domain.Event) error
@@ -25,4 +28,23 @@ type Params struct {
 
 func New(p Params) *Service {
 	return &Service{store: p.Store}
+}
+
+func validateEventInput(title string, t domain.EventType, customType string, start, end time.Time) error {
+	if title == "" {
+		return domain.ErrTitleRequired
+	}
+	if !t.IsValid() {
+		return domain.ErrInvalidType
+	}
+	if t == domain.EventTypeOther && customType == "" {
+		return domain.ErrCustomTypeRequired
+	}
+	if t != domain.EventTypeOther && customType != "" {
+		return domain.ErrCustomTypeNotAllowed
+	}
+	if !start.Before(end) {
+		return domain.ErrInvalidTimeRange
+	}
+	return nil
 }

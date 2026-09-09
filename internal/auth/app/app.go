@@ -8,18 +8,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-chi/chi/v5"
+
 	config "project/config/auth"
 	storage "project/internal/auth/adapter/postgres"
 	"project/internal/auth/controller/http"
 	"project/internal/auth/service"
-
 	"project/pkg/blacklist"
 	"project/pkg/httpserver"
 	"project/pkg/postgres"
 	"project/pkg/redis"
 	"project/pkg/token"
-
-	"github.com/go-chi/chi/v5"
 )
 
 func Run(ctx context.Context) error {

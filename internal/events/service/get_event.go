@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"project/internal/events/domain"
 
@@ -18,14 +17,4 @@ func (s *Service) GetEvent(ctx context.Context, userID, eventID uuid.UUID) (doma
 		return domain.Event{}, fmt.Errorf("get event: %w", err)
 	}
 	return event, nil
-}
-
-func (s *Service) DeleteEvent(ctx context.Context, userID, eventID uuid.UUID) error {
-	if err := s.store.DeleteEvent(ctx, userID, eventID); err != nil {
-		if errors.Is(err, domain.ErrEventNotFound) {
-			return err
-		}
-		return fmt.Errorf("delete event: %w", err)
-	}
-	return nil
 }

@@ -25,15 +25,15 @@ type claims struct {
 }
 
 type Info struct {
-	UserID    uuid.UUID
 	TokenID   string
 	ExpiresAt time.Time
+	UserID    uuid.UUID
 }
 
 func (t *Token) BuildAccessToken(userID uuid.UUID, expirations time.Duration) (string, error) {
 	now := time.Now().UTC()
 
-	claims := claims{
+	c := claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   userID.String(),
 			ID:        uuid.NewString(),
@@ -42,7 +42,7 @@ func (t *Token) BuildAccessToken(userID uuid.UUID, expirations time.Duration) (s
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, c)
 
 	signedToken, err := token.SignedString(t.secret)
 	if err != nil {
@@ -53,13 +53,13 @@ func (t *Token) BuildAccessToken(userID uuid.UUID, expirations time.Duration) (s
 }
 
 func (t *Token) ParseAccessToken(tokenString string) (Info, error) {
-	var claims claims
+	var c claims
 
 	token, err := jwt.ParseWithClaims(
 		tokenString,
-		&claims,
-		func(token *jwt.Token) (any, error) {
-			return []byte(t.secret), nil
+		&c,
+		func(_ *jwt.Token) (any, error) {
+			return t.secret, nil
 		},
 		jwt.WithValidMethods([]string{
 			jwt.SigningMethodHS256.Alg(),
@@ -74,22 +74,22 @@ func (t *Token) ParseAccessToken(tokenString string) (Info, error) {
 		return Info{}, ErrInvalidToken
 	}
 
-	userID, err := uuid.Parse(claims.Subject)
+	userID, err := uuid.Parse(c.Subject)
 	if err != nil {
 		return Info{}, fmt.Errorf("%w: invalid subject", ErrInvalidToken)
 	}
 
-	if claims.ID == "" {
+	if c.ID == "" {
 		return Info{}, fmt.Errorf("%w: token id is empty", ErrInvalidToken)
 	}
 
-	if claims.ExpiresAt == nil {
+	if c.ExpiresAt == nil {
 		return Info{}, fmt.Errorf("%w: expiration is empty", ErrInvalidToken)
 	}
 
 	return Info{
 		UserID:    userID,
-		TokenID:   claims.ID,
-		ExpiresAt: claims.ExpiresAt.Time,
+		TokenID:   c.ID,
+		ExpiresAt: c.ExpiresAt.Time,
 	}, nil
 }
