@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  golangci-lint:
+    name: GolangCI Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run unit tests
+        run: go test ./... -short -v
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build auth-service image
+        run: docker build -f deployments/auth/Dockerfile -t go-calendar-auth:ci .
+
+      - name: Build events-service image
+        run: docker build -f deployments/events/Dockerfile -t go-calendar-events:ci .
+
+  integration-and-e2e-tests:
+    name: Integration & E2E Tests
+    runs-on: ubuntu-latest
+    needs: [unit-tests, docker-build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Create .env for docker compose
+        working-directory: deployments
+        run: |
+          cat > .env << 'ENVEOF'
+          APP_NAME=go-calendar
+          APP_VERSION=ci
+
+          AUTH_HTTP_ADDRESS=0.0.0.0:8081
+          EVENTS_HTTP_ADDRESS=0.0.0.0:8080
+
+          AUTH_DB_USER=auth_user
+          AUTH_DB_PASSWORD=ci_password
+          AUTH_DB_NAME=auth_db
+
+          EVENTS_DB_USER=events_user
+          EVENTS_DB_PASSWORD=ci_password
+          EVENTS_DB_NAME=events_db
+
+          JWT_SECRET=ci_only_secret_not_for_production_use
+          JWT_EXPIRATION=24h
+
+          CACHE_TTL=300s
+          ENVEOF
+
+      - name: Start full stack
+        working-directory: deployments
+        run: docker compose up --build -d
+
+      - name: Wait for services to become healthy
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8081/api/v1/auth/login -o /dev/null -w "%{http_code}" | grep -qE "^[0-9]+$"; then
+              break
+            fi
+            echo "waiting for auth-service..."
+            sleep 2
+          done
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/api/v1/events/ -o /dev/null -w "%{http_code}" | grep -qE "^[0-9]+$"; then
+              break
+            fi
+            echo "waiting for events-service..."
+            sleep 2
+          done
+
+      - name: Run integration tests
+        run: go test -tags=integration ./test/integration/... -v
+
+      - name: Run E2E tests
+        run: go test -tags=e2e ./test/e2e/... -v
+
+      - name: Dump logs on failure
+        if: failure()
+        working-directory: deployments
+        run: docker compose logs
+
+      - name: Tear down stack
+        if: always()
+        working-directory: deployments
+        run: docker compose down -v
