@@ -51,7 +51,7 @@ func (c *Client) Login(ctx context.Context, email, password string) (string, err
 	}
 
 	response := struct {
-		AccessToken string `json:"token"`
+		AccessToken string `json:"access_token"`
 	}{}
 
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
