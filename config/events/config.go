@@ -8,6 +8,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 
 	"project/internal/events/adapter/cache"
+	"project/pkg/blacklist"
 	"project/pkg/httpserver"
 	"project/pkg/postgres"
 	"project/pkg/redis"
@@ -20,12 +21,13 @@ type App struct {
 }
 
 type Config struct {
-	App      App
-	HTTP     httpserver.Config
-	Token    token.Config
-	Redis    redis.Config
-	Postgres postgres.Config
-	Cache    cache.Config
+	App       App
+	HTTP      httpserver.Config
+	Token     token.Config
+	Redis     redis.Config
+	Blacklist blacklist.Config
+	Postgres  postgres.Config
+	Cache     cache.Config
 }
 
 func New() (Config, error) {

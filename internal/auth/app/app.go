@@ -34,7 +34,7 @@ func Run(ctx context.Context) error {
 
 	userStorage := storage.New(pgPool.Pool)
 
-	redisClient, err := redis.New(ctx, cfg.Redis)
+	redisClient, err := redis.New(ctx, redis.Config{URL: cfg.Blacklist.URL})
 	if err != nil {
 		return fmt.Errorf("error connection to redis: %w", err)
 	}

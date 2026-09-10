@@ -39,6 +39,10 @@ func Run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("error connection to redis: %w", err)
 	}
+	blacklistRedisClient, err := redis.New(ctx, redis.Config{URL: cfg.Blacklist.URL})
+	if err != nil {
+		return fmt.Errorf("error connection to blacklist redis: %w", err)
+	}
 
 	cachingStore := cache.New(cache.Params{
 		Next:   pgStore,
@@ -47,7 +51,7 @@ func Run(ctx context.Context) error {
 	})
 
 	tokenManager := token.New(cfg.Token)
-	blackListManager := blacklist.New(redisClient.Client)
+	blackListManager := blacklist.New(blacklistRedisClient.Client)
 
 	eventService := service.New(service.Params{Store: cachingStore})
 

@@ -8,6 +8,10 @@ import (
 	goredis "github.com/redis/go-redis/v9"
 )
 
+type Config struct {
+	URL string `envconfig:"BLACKLIST_REDIS_URL" required:"true"`
+}
+
 type Redis struct {
 	client *goredis.Client
 }
