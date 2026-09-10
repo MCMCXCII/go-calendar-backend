@@ -1,4 +1,4 @@
-package eventsclient
+package eventclient
 
 import "errors"
 
