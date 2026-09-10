@@ -19,7 +19,7 @@ func (s *Service) Logout(ctx context.Context, p LogoutParams) error {
 
 	ttl := time.Until(p.ExpiresAt)
 	if ttl <= 0 {
-		return fmt.Errorf("invalid token")
+		return ErrTokenExpired
 	}
 
 	if err := s.blacklist.Revoke(ctx, p.TokenID, ttl); err != nil {
