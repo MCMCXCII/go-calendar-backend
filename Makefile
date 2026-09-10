@@ -11,6 +11,8 @@ test-unit:
 	go test ./... -short
 test-integration:
 	go test -tags=integration ./test/integration/... -v
+test-e2e:
+	go test -tags=e2e ./test/e2e/... -v
 
 lint:
 	golangci-lint run ./...
