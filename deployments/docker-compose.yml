@@ -71,7 +71,7 @@ services:
       dockerfile: deployments/auth/Dockerfile
     environment:
       HTTP_ADDRESS: ${AUTH_HTTP_ADDRESS}
-      AUTH_DB_URL: "postgres://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth_db:5432/${AUTH_DB_NAME}?sslmode=disable"
+      DB_URL: "postgres://${AUTH_DB_USER}:${AUTH_DB_PASSWORD}@auth_db:5432/${AUTH_DB_NAME}?sslmode=disable"
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: ${JWT_EXPIRATION}
       REDIS_URL: "redis://redis:6379/0"
@@ -91,7 +91,7 @@ services:
       dockerfile: deployments/events/Dockerfile
     environment:
       HTTP_ADDRESS: ${EVENTS_HTTP_ADDRESS}
-      EVENTS_DB_URL: "postgres://${EVENTS_DB_USER}:${EVENTS_DB_PASSWORD}@events_db:5432/${EVENTS_DB_NAME}?sslmode=disable"
+      DB_URL: "postgres://${EVENTS_DB_USER}:${EVENTS_DB_PASSWORD}@events_db:5432/${EVENTS_DB_NAME}?sslmode=disable"
       JWT_SECRET: ${JWT_SECRET}
       REDIS_URL: "redis://redis:6379/1"
       CACHE_TTL: ${CACHE_TTL}
