@@ -11,9 +11,9 @@ import (
 )
 
 func (c *Client) Register(ctx context.Context, email, password string) (uuid.UUID, error) {
-	const register_path = "api/v1/auth/register"
+	const registerPath = "api/v1/auth/register"
 
-	path := fmt.Sprintf("http://%s/%s", c.host, register_path)
+	path := fmt.Sprintf("http://%s/%s", c.host, registerPath)
 
 	request := struct {
 		Email    string `json:"email"`
@@ -23,7 +23,7 @@ func (c *Client) Register(ctx context.Context, email, password string) (uuid.UUI
 		Password: password,
 	}
 
-	body, err := json.Marshal(request)
+	body, err := json.Marshal(request) //nolint:gosec
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("json.Marshal: %w", err)
 	}
