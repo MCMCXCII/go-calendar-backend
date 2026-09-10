@@ -9,9 +9,9 @@ import (
 )
 
 func (c *Client) Login(ctx context.Context, email, password string) (string, error) {
-	const login_path = "api/v1/auth/login"
+	const loginPath = "api/v1/auth/login"
 
-	path := fmt.Sprintf("http://%s/%s", c.host, login_path)
+	path := fmt.Sprintf("http://%s/%s", c.host, loginPath)
 
 	request := struct {
 		Email    string `json:"email"`
@@ -21,7 +21,7 @@ func (c *Client) Login(ctx context.Context, email, password string) (string, err
 		Password: password,
 	}
 
-	body, err := json.Marshal(request)
+	body, err := json.Marshal(request) //nolint:gosec
 	if err != nil {
 		return "", fmt.Errorf("json.Marshal: %w", err)
 	}

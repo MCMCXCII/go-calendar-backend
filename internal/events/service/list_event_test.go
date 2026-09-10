@@ -15,7 +15,7 @@ import (
 	"project/internal/events/service/mocks"
 )
 
-func captureQuery(t *testing.T, store *mocks.Mockstore, ctx context.Context) *domain.ListEventsParams {
+func captureQuery(ctx context.Context, t *testing.T, store *mocks.Mockstore) *domain.ListEventsParams {
 	t.Helper()
 
 	var captured domain.ListEventsParams
@@ -35,7 +35,7 @@ func TestService_ListEvents_ByDay_Success(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	store := mocks.NewMockstore(ctrl)
-	captured := captureQuery(t, store, ctx)
+	captured := captureQuery(ctx, t, store)
 
 	svc := service.New(service.Params{Store: store})
 
@@ -69,7 +69,7 @@ func TestService_ListEvents_ByWeek_Success(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	store := mocks.NewMockstore(ctrl)
-	captured := captureQuery(t, store, ctx)
+	captured := captureQuery(ctx, t, store)
 
 	svc := service.New(service.Params{Store: store})
 
@@ -128,7 +128,7 @@ func TestService_ListEvents_ByMonth_Success(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	store := mocks.NewMockstore(ctrl)
-	captured := captureQuery(t, store, ctx)
+	captured := captureQuery(ctx, t, store)
 
 	svc := service.New(service.Params{Store: store})
 
@@ -158,7 +158,7 @@ func TestService_ListEvents_ByFromTo_Success(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	store := mocks.NewMockstore(ctrl)
-	captured := captureQuery(t, store, ctx)
+	captured := captureQuery(ctx, t, store)
 
 	svc := service.New(service.Params{Store: store})
 
@@ -226,7 +226,7 @@ func TestService_ListEvents_FromToTakesPriorityOverDayWeekMonth(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	store := mocks.NewMockstore(ctrl)
-	captured := captureQuery(t, store, ctx)
+	captured := captureQuery(ctx, t, store)
 
 	svc := service.New(service.Params{Store: store})
 
