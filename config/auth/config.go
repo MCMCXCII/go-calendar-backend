@@ -8,9 +8,9 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 
+	"project/pkg/blacklist"
 	"project/pkg/httpserver"
 	"project/pkg/postgres"
-	"project/pkg/redis"
 	"project/pkg/token"
 )
 
@@ -23,7 +23,7 @@ type Config struct {
 	App        App
 	HTTP       httpserver.Config
 	Token      token.Config
-	Redis      redis.Config
+	Blacklist  blacklist.Config
 	Postgres   postgres.Config
 	Expiration time.Duration `envconfig:"JWT_EXPIRATION" default:"24h"`
 }
