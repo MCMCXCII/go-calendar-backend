@@ -5,4 +5,5 @@ import "errors"
 var (
 	ErrUserNotFound       = errors.New("user not found")
 	ErrEmailAlreadyExists = errors.New("email already exisis")
+	ErrTokenExpired       = errors.New("token is already expired")
 )

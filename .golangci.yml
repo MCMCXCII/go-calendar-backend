@@ -1,66 +1,68 @@
+version: "2"
 run:
-  timeout: 5m
   tests: true
-
 linters:
-  disable-all: true
+  default: none
   enable:
-    # --- Обязательный базовый набор ---
-    - errcheck      # находит проигнорированные ошибки (err := f(); без if err != nil)
-    - govet         # находит подозрительные конструкции (go vet из стандартного тулчейна)
-    - staticcheck   # мощный статический анализ: баги, устаревший код, неверные форматы
-    - unused        # неиспользуемые переменные, функции, импорты
-    - ineffassign   # присвоения значений, которые нигде не читаются
-    - gosimple      # предлагает более простой/идиоматичный способ написать то же самое
-
-    # --- Форматирование и стиль ---
-    - gofmt         # проверка стандартного форматирования Go
-    - goimports     # проверка порядка и группировки импортов
-    - misspell      # опечатки в комментариях и строках (english)
-
-    # --- Безопасность и надёжность ---
-    - gosec         # потенциальные уязвимости (SQL-инъекции, слабые хэши, и т.п.)
-    - bodyclose     # незакрытые http.Response.Body — частая утечка ресурсов
-    - noctx         # http-запросы без context.Context
-
-    # --- Читаемость и лучшие практики ---
-    - revive        # современная замена golint: стиль, именование, комментарии к экспортам
-    - unparam       # неиспользуемые параметры функций
-    - unconvert     # лишние, бесполезные преобразования типов
-    - dupl          # дублирующиеся куски кода
-    - gocritic      # разносторонние проверки стиля и потенциальных ошибок
-
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
-
-  gosec:
-    excludes:
-      - G104 # дублирует errcheck, не нужен вторично
-
-  dupl:
-    threshold: 100 # минимальный размер дублирующегося блока (в токенах)
-
-  misspell:
-    locale: US
-
+    - bodyclose
+    - dupl
+    - errcheck
+    - gocritic
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - noctx
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+  settings:
+    dupl:
+      threshold: 100
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    gosec:
+      excludes:
+        - G104
+    govet:
+      disable:
+        - fieldalignment
+      enable-all: true
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - dupl
+          - gosec
+        path: _test\.go
+    paths:
+      - migrations
+      - mocks
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude-dirs:
-    - migrations
-    - mocks
-
-  exclude-rules:
-    # в тестах чуть мягче: длинные функции и дублирование — норм
-    - path: _test\.go
-      linters:
-        - dupl
-        - gosec
-
   max-issues-per-linter: 0
   max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - migrations
+      - mocks
+      - third_party$
+      - builtin$
+      - examples$
