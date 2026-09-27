@@ -40,7 +40,7 @@ func (s *Service) CreateEvent(ctx context.Context, p CreateEventParams) (CreateE
 	}
 
 	if err := s.store.CreateEvent(ctx, event); err != nil {
-		return CreateEventResult{}, fmt.Errorf("create event: %w", err)
+		return CreateEventResult{}, fmt.Errorf("store.CreateEvent: %w", err)
 	}
 
 	return CreateEventResult{EventID: event.ID}, nil

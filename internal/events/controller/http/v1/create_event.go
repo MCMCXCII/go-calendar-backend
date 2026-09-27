@@ -7,6 +7,7 @@ import (
 
 	"project/internal/events/domain"
 	"project/internal/events/service"
+	"project/pkg/render"
 )
 
 type CreateEventRequest struct {
@@ -24,23 +25,26 @@ type CreateEventResponse struct {
 }
 
 func (v *V1) CreateEvent(w http.ResponseWriter, r *http.Request) {
-	userID, ok := userIDFromContext(r.Context())
+	ctx := r.Context()
+
+	userID, ok := userIDFromContext(ctx)
 	if !ok {
-		writeJSON(w, http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		render.Error(ctx, w, ErrUnauthorized, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	var req CreateEventRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid request body"})
-		return
-	}
-	if err := v.validate.Struct(req); err != nil {
-		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		render.Error(ctx, w, err, http.StatusBadRequest, "json decode error")
 		return
 	}
 
-	result, err := v.uc.CreateEvent(r.Context(), service.CreateEventParams{
+	if err := v.Validate(req); err != nil {
+		writeError(ctx, w, err)
+		return
+	}
+
+	result, err := v.uc.CreateEvent(ctx, service.CreateEventParams{
 		UserID:      userID,
 		Title:       req.Title,
 		Type:        domain.EventType(req.Type),
@@ -50,9 +54,9 @@ func (v *V1) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		EndTime:     req.EndTime,
 	})
 	if err != nil {
-		writeError(w, err)
+		writeError(ctx, w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, CreateEventResponse{ID: result.EventID.String(), Message: "created"})
+	render.JSON(w, CreateEventResponse{ID: result.EventID.String(), Message: "created"}, http.StatusCreated)
 }

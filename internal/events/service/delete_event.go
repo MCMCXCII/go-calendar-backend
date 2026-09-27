@@ -14,7 +14,7 @@ func (s *Service) DeleteEvent(ctx context.Context, userID, eventID uuid.UUID) er
 		if errors.Is(err, domain.ErrEventNotFound) {
 			return err
 		}
-		return fmt.Errorf("delete event: %w", err)
+		return fmt.Errorf("store.DeleteEvent: %w", err)
 	}
 	return nil
 }

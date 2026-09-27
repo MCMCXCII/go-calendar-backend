@@ -4,13 +4,20 @@ import (
 	"net/http"
 
 	"project/internal/auth/service"
+	"project/pkg/render"
 	"project/pkg/token"
 )
 
+type MessageResponse struct {
+	Message string `json:"message"`
+}
+
 func (v *V1) Logout(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	tokenInfo, ok := r.Context().Value(tokenInfoContextKey{}).(token.Info)
 	if !ok {
-		writeJSON(w, http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		render.Error(ctx, w, ErrUnauthorized, http.StatusUnauthorized, "r.Context().Value() error")
 		return
 	}
 
@@ -18,9 +25,9 @@ func (v *V1) Logout(w http.ResponseWriter, r *http.Request) {
 		TokenID:   tokenInfo.TokenID,
 		ExpiresAt: tokenInfo.ExpiresAt,
 	}); err != nil {
-		writeError(w, err)
+		writeError(ctx, w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, MessageResponse{Message: "logged out"})
+	render.JSON(w, MessageResponse{Message: "logged out"}, http.StatusOK)
 }

@@ -2,10 +2,7 @@ package v1
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"log/slog"
-	"net/http"
 
 	"project/internal/events/domain"
 	"project/internal/events/service"
@@ -34,40 +31,30 @@ func New(uc usecase) *V1 {
 	}
 }
 
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
-type MessageResponse struct {
-	Message string `json:"message"`
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		slog.Error("write json response", "error", err)
+func (v *V1) Validate(req any) error {
+	err := v.validate.Struct(req)
+	if err == nil {
+		return nil
 	}
+
+	var ve validator.ValidationErrors
+	if !errors.As(err, &ve) {
+		return err
+	}
+
+	return ValidationError(ve[0])
 }
 
-func writeError(w http.ResponseWriter, err error) {
-	switch {
-	case errors.Is(err, domain.ErrEventNotFound):
-		writeJSON(w, http.StatusNotFound, ErrorResponse{Error: "event not found"})
-
-	case errors.Is(err, domain.ErrInvalidTimeRange),
-		errors.Is(err, domain.ErrInvalidType),
-		errors.Is(err, domain.ErrCustomTypeRequired),
-		errors.Is(err, domain.ErrCustomTypeNotAllowed),
-		errors.Is(err, domain.ErrTitleRequired),
-		errors.Is(err, domain.ErrInvalidPeriod),
-		errors.Is(err, domain.ErrPeriodRequired):
-		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: err.Error()})
-
-	default:
-		slog.Error("internal error", "error", err)
-		writeJSON(w, http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})
+func ValidationError(fe validator.FieldError) error {
+	switch fe.Field() {
+	case "Title":
+		return domain.ErrTitleRequired
+	case "Type":
+		return domain.ErrInvalidType
+	case "StartTime", "EndTime":
+		return domain.ErrInvalidTimeRange
 	}
+	return errors.New("validation failed: " + fe.Field())
 }
 
 func toEventResponse(e domain.Event) EventResponse {

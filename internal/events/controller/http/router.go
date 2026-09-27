@@ -5,9 +5,12 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	v1 "project/internal/events/controller/http/v1"
 	"project/internal/events/service"
+	"project/pkg/logger"
+	"project/pkg/metrics"
 	"project/pkg/token"
 )
 
@@ -19,12 +22,16 @@ type blackList interface {
 	IsRevoked(ctx context.Context, tokenID string) (bool, error)
 }
 
-func EventsRouter(r *chi.Mux, svc *service.Service, tp tokenParser, bl blackList) {
+func EventsRouter(r *chi.Mux, svc *service.Service, tp tokenParser, bl blackList, m *metrics.HTTPServer) {
 	handler := v1.New(svc)
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(logger.Middleware)
+	r.Use(metrics.NewMiddleware(m))
+
+	r.Handle("/metrics", promhttp.Handler())
 
 	r.Route("/api/v1/events", func(r chi.Router) {
 		r.Use(v1.Auth(tp, bl))

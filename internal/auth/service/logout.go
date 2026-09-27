@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 )
@@ -14,7 +13,7 @@ type LogoutParams struct {
 
 func (s *Service) Logout(ctx context.Context, p LogoutParams) error {
 	if p.TokenID == "" {
-		return errors.New("token id is empty")
+		return ErrTokenIDIsEmpty
 	}
 
 	ttl := time.Until(p.ExpiresAt)
@@ -23,7 +22,7 @@ func (s *Service) Logout(ctx context.Context, p LogoutParams) error {
 	}
 
 	if err := s.blacklist.Revoke(ctx, p.TokenID, ttl); err != nil {
-		return fmt.Errorf("revoke access token: %w", err)
+		return fmt.Errorf("blacklist.Revoke: %w", err)
 	}
 	return nil
 }

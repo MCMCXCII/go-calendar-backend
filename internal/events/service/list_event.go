@@ -29,7 +29,7 @@ func (s *Service) ListEvents(ctx context.Context, p ListEventsParams) ([]domain.
 
 	events, err := s.store.ListEvents(ctx, q)
 	if err != nil {
-		return nil, fmt.Errorf("list events: %w", err)
+		return nil, fmt.Errorf("store.ListEvents: %w", err)
 	}
 	return events, nil
 }

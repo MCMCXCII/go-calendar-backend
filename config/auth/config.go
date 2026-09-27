@@ -10,6 +10,7 @@ import (
 
 	"project/pkg/blacklist"
 	"project/pkg/httpserver"
+	"project/pkg/logger"
 	"project/pkg/postgres"
 	"project/pkg/token"
 )
@@ -25,6 +26,7 @@ type Config struct {
 	Token      token.Config
 	Blacklist  blacklist.Config
 	Postgres   postgres.Config
+	Logger     logger.Config
 	Expiration time.Duration `envconfig:"JWT_EXPIRATION" default:"24h"`
 }
 

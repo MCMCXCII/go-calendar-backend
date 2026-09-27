@@ -37,7 +37,7 @@ func (s *Service) UpdateEvent(ctx context.Context, p UpdateEventParams) error {
 	}
 
 	if err := s.store.UpdateEvent(ctx, event); err != nil {
-		return fmt.Errorf("update event: %w", err)
+		return fmt.Errorf("store.UpdateEvent: %w", err)
 	}
 	return nil
 }

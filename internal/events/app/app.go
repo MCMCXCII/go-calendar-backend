@@ -3,12 +3,12 @@ package app
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 
 	config "project/config/events"
 	"project/internal/events/adapter/cache"
@@ -17,6 +17,8 @@ import (
 	"project/internal/events/service"
 	"project/pkg/blacklist"
 	"project/pkg/httpserver"
+	"project/pkg/logger"
+	"project/pkg/metrics"
 	"project/pkg/postgres"
 	"project/pkg/redis"
 	"project/pkg/token"
@@ -26,6 +28,10 @@ func Run(ctx context.Context) error {
 	cfg, err := config.New()
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
+	}
+
+	if err = logger.New(cfg.Logger); err != nil {
+		return fmt.Errorf("init logger: %w", err)
 	}
 
 	pgPool, err := postgres.New(ctx, cfg.Postgres)
@@ -55,27 +61,31 @@ func Run(ctx context.Context) error {
 
 	eventService := service.New(service.Params{Store: cachingStore})
 
+	httpMetrics := metrics.NewHTTPServer()
+
 	r := chi.NewRouter()
-	http.EventsRouter(r, eventService, tokenManager, blackListManager)
+	http.EventsRouter(r, eventService, tokenManager, blackListManager, httpMetrics)
 	httpServer := httpserver.New(r, cfg.HTTP)
 
-	slog.Info("App started!")
+	logger.Log.Info("server started",
+		zap.String("app", cfg.App.Name),
+		zap.String("version", cfg.App.Version),
+		zap.String("address", cfg.HTTP.Address),
+	)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 
-	<-sig // wait signal
+	<-sig
 
-	slog.Info("App got signal to stop")
+	logger.Log.Info("shutdown signal received")
 
-	// Controllers close
 	httpServer.Close()
 
-	// Adapters close
 	redisClient.Close()
 	pgPool.Close()
 
-	slog.Info("App stopped!")
+	logger.Log.Info("server stopped")
 
 	return nil
 }

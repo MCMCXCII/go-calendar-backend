@@ -10,6 +10,7 @@ import (
 	"project/internal/events/adapter/cache"
 	"project/pkg/blacklist"
 	"project/pkg/httpserver"
+	"project/pkg/logger"
 	"project/pkg/postgres"
 	"project/pkg/redis"
 	"project/pkg/token"
@@ -27,6 +28,7 @@ type Config struct {
 	Redis     redis.Config
 	Blacklist blacklist.Config
 	Postgres  postgres.Config
+	Logger    logger.Config
 	Cache     cache.Config
 }
 

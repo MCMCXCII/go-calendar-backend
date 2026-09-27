@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"project/pkg/render"
 	"project/pkg/token"
 )
 
@@ -21,30 +22,32 @@ type BlackList interface {
 func Auth(tokenParser TokenParser, blacklist BlackList) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
 			header := r.Header.Get("Authorization")
 			tokenString, ok := strings.CutPrefix(header, "Bearer ")
 			if !ok || tokenString == "" {
-				writeJSON(w, http.StatusUnauthorized, ErrorResponse{Error: "missing or malformed authorization header"})
+				render.Error(ctx, w, ErrUnauthorized, http.StatusUnauthorized, "missing authorization header")
 				return
 			}
 
 			info, err := tokenParser.ParseAccessToken(tokenString)
 			if err != nil {
-				writeJSON(w, http.StatusUnauthorized, ErrorResponse{Error: "invalid or expired token"})
+				render.Error(ctx, w, ErrUnauthorized, http.StatusUnauthorized, "invalid or expired token")
 				return
 			}
 
-			revoked, err := blacklist.IsRevoked(r.Context(), info.TokenID)
+			revoked, err := blacklist.IsRevoked(ctx, info.TokenID)
 			if err != nil {
-				writeJSON(w, http.StatusInternalServerError, ErrorResponse{Error: "internal server error"})
+				render.Error(ctx, w, err, http.StatusInternalServerError, "check blacklist failed")
 				return
 			}
 			if revoked {
-				writeJSON(w, http.StatusUnauthorized, ErrorResponse{Error: "token revoked"})
+				render.Error(ctx, w, ErrUnauthorized, http.StatusUnauthorized, "token revoked")
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), tokenInfoContextKey{}, info)
+			ctx = context.WithValue(ctx, tokenInfoContextKey{}, info)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

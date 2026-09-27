@@ -7,6 +7,7 @@ import (
 
 	"project/internal/events/domain"
 	"project/internal/events/service"
+	"project/pkg/render"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -22,29 +23,32 @@ type UpdateEventRequest struct {
 }
 
 func (v *V1) UpdateEvent(w http.ResponseWriter, r *http.Request) {
-	userID, ok := userIDFromContext(r.Context())
+	ctx := r.Context()
+
+	userID, ok := userIDFromContext(ctx)
 	if !ok {
-		writeJSON(w, http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		render.Error(ctx, w, ErrUnauthorized, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	eventID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid event id"})
+		render.Error(ctx, w, err, http.StatusBadRequest, "invalid event id")
 		return
 	}
 
 	var req UpdateEventRequest
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid request body"})
-		return
-	}
-	if err = v.validate.Struct(req); err != nil {
-		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: err.Error()})
+		render.Error(ctx, w, err, http.StatusBadRequest, "json decode error")
 		return
 	}
 
-	err = v.uc.UpdateEvent(r.Context(), service.UpdateEventParams{
+	if err = v.Validate(req); err != nil {
+		writeError(ctx, w, err)
+		return
+	}
+
+	err = v.uc.UpdateEvent(ctx, service.UpdateEventParams{
 		EventID:     eventID,
 		UserID:      userID,
 		Title:       req.Title,
@@ -55,9 +59,9 @@ func (v *V1) UpdateEvent(w http.ResponseWriter, r *http.Request) {
 		EndTime:     req.EndTime,
 	})
 	if err != nil {
-		writeError(w, err)
+		writeError(ctx, w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, MessageResponse{Message: "updated"})
+	render.JSON(w, render.Message{Message: "updated"}, http.StatusOK)
 }
