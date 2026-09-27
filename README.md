@@ -10,6 +10,10 @@ Backend-сервис на Go для учёта пользовательских 
 - golang-migrate
 - JWT
 - bcrypt
+- zap
+- testify
+- Prometheus + Grafana
+- GitHub Actions(CI)
 - Docker Compose
 
 ## Архитектура
@@ -18,10 +22,14 @@ Backend-сервис на Go для учёта пользовательских 
 - Сервисы не общаются напрямую: JWT валидируется в events-service самостоятельно (подпись + чёрный список в Redis)
 - Redis: чёрный список токенов (auth) + кэш списков событий с инвалидацией (events)
 
-## Запуск
+## Тестирование
+- make test-unit (юнит тесты)
+- make test-integration (интеграционные тесты)
+- make test-e2e (e2e тесты полного сценария)
+- make lint (golangci-lint)
 
+## Запуск
 ```bash
-cd deployments
-docker compose up --build
+make up
 ```
 
