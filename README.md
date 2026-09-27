@@ -13,7 +13,7 @@ Backend-сервис на Go для учёта пользовательских 
 - zap
 - testify
 - Prometheus + Grafana
-- GitHub Actions(CI)
+- GitHub Actions (CI)
 - Docker Compose
 
 ## Архитектура
@@ -23,10 +23,12 @@ Backend-сервис на Go для учёта пользовательских 
 - Redis: чёрный список токенов (auth) + кэш списков событий с инвалидацией (events)
 
 ## Тестирование
-- make test-unit (юнит тесты)
-- make test-integration (интеграционные тесты)
-- make test-e2e (e2e тесты полного сценария)
-- make lint (golangci-lint)
+```bash
+make test-unit  # юнит-тесты
+make test-integration # интеграционные тесты
+make test-e2e # e2e тесты полного сценария
+make lint # golangci-lint
+```
 
 ## Запуск
 ```bash
