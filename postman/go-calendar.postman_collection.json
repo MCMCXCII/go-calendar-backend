@@ -3,8 +3,7 @@
     "_postman_id": "36b11d18-e44a-482e-8714-ec9bcca3c804",
     "name": "go-calendar",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "55320876",
-    "_collection_link": "https://go.postman.co/collection/55320876-36b11d18-e44a-482e-8714-ec9bcca3c804?source=collection_link"
+    "_exporter_id": "55320876"
   },
   "item": [
     {
@@ -17,88 +16,28 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "const data = pm.response.json();\r",
-                  "pm.environment.set(\"access_token\", data.access_token);\r",
+                  "const data = pm.response.json();",
+                  "pm.environment.set(\"access_token\", data.access_token);",
                   ""
                 ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
+                "type": "text/javascript"
               }
             }
           ],
           "request": {
-            "auth": {
-              "type": "jwt",
-              "jwt": [
-                {
-                  "key": "algorithm",
-                  "value": "HS256",
-                  "type": "string"
-                },
-                {
-                  "key": "isSecretBase64Encoded",
-                  "value": false,
-                  "type": "boolean"
-                },
-                {
-                  "key": "payload",
-                  "value": "{}",
-                  "type": "string"
-                },
-                {
-                  "key": "addTokenTo",
-                  "value": "header",
-                  "type": "string"
-                },
-                {
-                  "key": "headerPrefix",
-                  "value": "Bearer",
-                  "type": "string"
-                },
-                {
-                  "key": "queryParamKey",
-                  "value": "token",
-                  "type": "string"
-                },
-                {
-                  "key": "header",
-                  "value": "{}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"email\": \"testing@example.com\",\r\n  \"password\": \"password123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{auth_url}}/register",
-              "host": [
-                "{{auth_url}}"
-              ],
-              "path": [
-                "register"
-              ]
+              "host": ["{{auth_url}}"],
+              "path": ["register"]
             }
           },
           "response": []
@@ -110,69 +49,17 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "const data = pm.response.json();\r",
+                  "const data = pm.response.json();",
                   "pm.environment.set(\"access_token\", data.access_token);"
                 ],
-                "type": "text/javascript",
-                "packages": {},
-                "requests": {}
+                "type": "text/javascript"
               }
             }
           ],
           "request": {
-            "auth": {
-              "type": "jwt",
-              "jwt": [
-                {
-                  "key": "algorithm",
-                  "value": "HS256",
-                  "type": "string"
-                },
-                {
-                  "key": "isSecretBase64Encoded",
-                  "value": false,
-                  "type": "boolean"
-                },
-                {
-                  "key": "payload",
-                  "value": "{}",
-                  "type": "string"
-                },
-                {
-                  "key": "addTokenTo",
-                  "value": "header",
-                  "type": "string"
-                },
-                {
-                  "key": "headerPrefix",
-                  "value": "Bearer",
-                  "type": "string"
-                },
-                {
-                  "key": "queryParamKey",
-                  "value": "token",
-                  "type": "string"
-                },
-                {
-                  "key": "header",
-                  "value": "{}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              },
-              {
-                "key": "",
-                "value": "",
-                "type": "text",
-                "disabled": true
-              }
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
             ],
             "body": {
               "mode": "raw",
@@ -180,12 +67,23 @@
             },
             "url": {
               "raw": "{{auth_url}}/login",
-              "host": [
-                "{{auth_url}}"
-              ],
-              "path": [
-                "login"
-              ]
+              "host": ["{{auth_url}}"],
+              "path": ["login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{auth_url}}/logout",
+              "host": ["{{auth_url}}"],
+              "path": ["logout"]
             }
           },
           "response": []
@@ -199,24 +97,18 @@
           "name": "Register: email exists",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"email\": \"testing@example.com\",\r\n  \"password\": \"password123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{auth_url}}/register",
-              "host": [
-                "{{auth_url}}"
-              ],
-              "path": [
-                "register"
-              ]
+              "host": ["{{auth_url}}"],
+              "path": ["register"]
             }
           },
           "response": []
@@ -225,24 +117,18 @@
           "name": "Register: email empty",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"email\": \"\",\r\n  \"password\": \"password123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{auth_url}}/register",
-              "host": [
-                "{{auth_url}}"
-              ],
-              "path": [
-                "register"
-              ]
+              "host": ["{{auth_url}}"],
+              "path": ["register"]
             }
           },
           "response": []
@@ -251,24 +137,18 @@
           "name": "Register: invalid password",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"email\": \"t@example.com\",\r\n  \"password\": \"123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{auth_url}}/register",
-              "host": [
-                "{{auth_url}}"
-              ],
-              "path": [
-                "register"
-              ]
+              "host": ["{{auth_url}}"],
+              "path": ["register"]
             }
           },
           "response": []
@@ -277,24 +157,18 @@
           "name": "Register: email wrong",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"texample.com\",\r\n  \"password\": \"123\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\r\n  \"email\": \"texample.com\",\r\n  \"password\": \"password123\"\r\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{auth_url}}/register",
-              "host": [
-                "{{auth_url}}"
-              ],
-              "path": [
-                "register"
-              ]
+              "host": ["{{auth_url}}"],
+              "path": ["register"]
             }
           },
           "response": []
@@ -303,33 +177,454 @@
           "name": "Login: password not correct",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n  \"email\": \"testing@example.com\",\r\n  \"password\": \"452345325234534253245\"\r\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+              "raw": "{\r\n  \"email\": \"testing@example.com\",\r\n  \"password\": \"wrong-password\"\r\n}",
+              "options": { "raw": { "language": "json" } }
             },
             "url": {
               "raw": "{{auth_url}}/login",
-              "host": [
-                "{{auth_url}}"
-              ],
-              "path": [
-                "login"
+              "host": ["{{auth_url}}"],
+              "path": ["login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login: email not found",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"nobody@example.com\",\r\n  \"password\": \"password123\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{auth_url}}/login",
+              "host": ["{{auth_url}}"],
+              "path": ["login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout: no token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{auth_url}}/logout",
+              "host": ["{{auth_url}}"],
+              "path": ["logout"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "events: happy",
+      "item": [
+        {
+          "name": "Create Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.environment.set(\"event_id\", data.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Совещание\",\r\n  \"type\": \"meeting\",\r\n  \"description\": \"Обсуждение проекта\",\r\n  \"start_time\": \"2026-12-01T10:00:00Z\",\r\n  \"end_time\": \"2026-12-01T11:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/",
+              "host": ["{{events_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event: type other",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"День рождения\",\r\n  \"type\": \"other\",\r\n  \"custom_type\": \"birthday\",\r\n  \"start_time\": \"2026-12-02T18:00:00Z\",\r\n  \"end_time\": \"2026-12-02T20:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/",
+              "host": ["{{events_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/{{event_id}}",
+              "host": ["{{events_url}}"],
+              "path": ["{{event_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Events: by day",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/?day=2026-12-01",
+              "host": ["{{events_url}}"],
+              "path": [""],
+              "query": [{ "key": "day", "value": "2026-12-01" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Events: by week",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/?week=2026-W49",
+              "host": ["{{events_url}}"],
+              "path": [""],
+              "query": [{ "key": "week", "value": "2026-W49" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Events: by month",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/?month=2026-12",
+              "host": ["{{events_url}}"],
+              "path": [""],
+              "query": [{ "key": "month", "value": "2026-12" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Events: by from/to",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/?from=2026-12-01T00:00:00Z&to=2026-12-10T00:00:00Z",
+              "host": ["{{events_url}}"],
+              "path": [""],
+              "query": [
+                { "key": "from", "value": "2026-12-01T00:00:00Z" },
+                { "key": "to", "value": "2026-12-10T00:00:00Z" }
               ]
             }
           },
           "response": []
         },
         {
-          "name": "Login: email not correct",
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Совещание (перенесено)\",\r\n  \"type\": \"meeting\",\r\n  \"start_time\": \"2026-12-01T12:00:00Z\",\r\n  \"end_time\": \"2026-12-01T13:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/{{event_id}}",
+              "host": ["{{events_url}}"],
+              "path": ["{{event_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/{{event_id}}",
+              "host": ["{{events_url}}"],
+              "path": ["{{event_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "events: errors",
+      "item": [
+        {
+          "name": "Create Event: no token",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Событие\",\r\n  \"type\": \"meeting\",\r\n  \"start_time\": \"2026-12-01T10:00:00Z\",\r\n  \"end_time\": \"2026-12-01T11:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/",
+              "host": ["{{events_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event: title empty",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"\",\r\n  \"type\": \"meeting\",\r\n  \"start_time\": \"2026-12-01T10:00:00Z\",\r\n  \"end_time\": \"2026-12-01T11:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/",
+              "host": ["{{events_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event: invalid type",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Событие\",\r\n  \"type\": \"unknown_type\",\r\n  \"start_time\": \"2026-12-01T10:00:00Z\",\r\n  \"end_time\": \"2026-12-01T11:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/",
+              "host": ["{{events_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event: other without custom_type",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Событие\",\r\n  \"type\": \"other\",\r\n  \"start_time\": \"2026-12-01T10:00:00Z\",\r\n  \"end_time\": \"2026-12-01T11:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/",
+              "host": ["{{events_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event: custom_type not allowed",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Событие\",\r\n  \"type\": \"meeting\",\r\n  \"custom_type\": \"birthday\",\r\n  \"start_time\": \"2026-12-01T10:00:00Z\",\r\n  \"end_time\": \"2026-12-01T11:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/",
+              "host": ["{{events_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Event: invalid time range",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Событие\",\r\n  \"type\": \"meeting\",\r\n  \"start_time\": \"2026-12-01T11:00:00Z\",\r\n  \"end_time\": \"2026-12-01T10:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/",
+              "host": ["{{events_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event: invalid id",
           "request": {
             "method": "GET",
-            "header": []
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/not-a-uuid",
+              "host": ["{{events_url}}"],
+              "path": ["not-a-uuid"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Event: not found",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/00000000-0000-0000-0000-000000000000",
+              "host": ["{{events_url}}"],
+              "path": ["00000000-0000-0000-0000-000000000000"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Events: no filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/",
+              "host": ["{{events_url}}"],
+              "path": [""]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Events: no token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{events_url}}/?day=2026-12-01",
+              "host": ["{{events_url}}"],
+              "path": [""],
+              "query": [{ "key": "day", "value": "2026-12-01" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Event: not found",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"title\": \"Событие\",\r\n  \"type\": \"meeting\",\r\n  \"start_time\": \"2026-12-01T10:00:00Z\",\r\n  \"end_time\": \"2026-12-01T11:00:00Z\"\r\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{events_url}}/00000000-0000-0000-0000-000000000000",
+              "host": ["{{events_url}}"],
+              "path": ["00000000-0000-0000-0000-000000000000"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Event: not found",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{events_url}}/00000000-0000-0000-0000-000000000000",
+              "host": ["{{events_url}}"],
+              "path": ["00000000-0000-0000-0000-000000000000"]
+            }
           },
           "response": []
         }

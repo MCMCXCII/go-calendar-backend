@@ -22,16 +22,10 @@ type RegisterResult struct {
 
 func (s *Service) Register(ctx context.Context, req RegisterParams) (RegisterResult, error) {
 	email := strings.ToLower(strings.TrimSpace(req.Email))
-	if email == "" {
-		return RegisterResult{}, ErrEmailEmpty
-	}
-	if req.Password == "" {
-		return RegisterResult{}, ErrPasswordEmpty
-	}
 
 	passwordHash, err := hashPassword(req.Password)
 	if err != nil {
-		return RegisterResult{}, fmt.Errorf("error hash password: %w", err)
+		return RegisterResult{}, fmt.Errorf("hashPassword: %w", err)
 	}
 
 	user := domain.User{
@@ -41,7 +35,7 @@ func (s *Service) Register(ctx context.Context, req RegisterParams) (RegisterRes
 	}
 
 	if err := s.store.CreateUser(ctx, user); err != nil {
-		return RegisterResult{}, fmt.Errorf("error create user: %w", err)
+		return RegisterResult{}, fmt.Errorf("store.CreateUser: %w", err)
 	}
 
 	return RegisterResult{
@@ -55,7 +49,7 @@ func hashPassword(password string) (string, error) {
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		return "", fmt.Errorf("generate password hash: %w", err)
+		return "", fmt.Errorf("bcrypt.GenerateFromPassword: %w", err)
 	}
 
 	return string(hash), nil

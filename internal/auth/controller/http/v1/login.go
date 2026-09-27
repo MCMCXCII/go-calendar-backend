@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"project/internal/auth/service"
+	"project/pkg/render"
 )
 
 type LoginRequest struct {
@@ -17,24 +18,28 @@ type LoginResponse struct {
 }
 
 func (v *V1) Login(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var req LoginRequest
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid request body"})
-		return
-	}
-	if err := v.validate.Struct(req); err != nil {
-		writeValidationError(w, err)
+		render.Error(ctx, w, err, http.StatusBadRequest, "json decode error")
 		return
 	}
 
-	result, err := v.uc.Login(r.Context(), service.LoginParams{
+	if err := v.Validate(req); err != nil {
+		writeError(ctx, w, err)
+		return
+	}
+
+	token, err := v.uc.Login(ctx, service.LoginParams{
 		Email:    req.Email,
 		Password: req.Password,
 	})
 	if err != nil {
-		writeError(w, err)
+		writeError(ctx, w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, LoginResponse{AccessToken: result.AccessToken})
+	render.JSON(w, LoginResponse{AccessToken: token.AccessToken}, http.StatusOK)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 
 	"project/internal/auth/service"
+	"project/pkg/render"
 )
 
 type RegisterRequest struct {
@@ -20,27 +21,30 @@ type RegisterResponse struct {
 }
 
 func (v *V1) Register(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid request body"})
-		return
-	}
-	if err := v.validate.Struct(req); err != nil {
-		writeValidationError(w, err)
+		render.Error(ctx, w, err, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	result, err := v.uc.Register(r.Context(), service.RegisterParams{
+	if err := v.Validate(req); err != nil {
+		writeError(ctx, w, err)
+		return
+	}
+
+	registered, err := v.uc.Register(r.Context(), service.RegisterParams{
 		Email:    req.Email,
 		Password: req.Password,
 	})
 	if err != nil {
-		writeError(w, err)
+		writeError(ctx, w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, RegisterResponse{
-		UserID:  result.UserID,
+	render.JSON(w, RegisterResponse{
+		UserID:  registered.UserID,
 		Message: "registered",
-	})
+	}, http.StatusCreated)
 }

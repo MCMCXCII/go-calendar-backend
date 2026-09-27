@@ -14,7 +14,7 @@ func (s *Service) GetEvent(ctx context.Context, userID, eventID uuid.UUID) (doma
 		if err == domain.ErrEventNotFound {
 			return domain.Event{}, err
 		}
-		return domain.Event{}, fmt.Errorf("get event: %w", err)
+		return domain.Event{}, fmt.Errorf("store.GetEvent: %w", err)
 	}
 	return event, nil
 }

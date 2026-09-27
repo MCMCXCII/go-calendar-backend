@@ -32,7 +32,7 @@ func (s *Service) Login(ctx context.Context, req LoginParams) (LoginResult, erro
 		if errors.Is(err, domain.ErrUserNotFound) {
 			return LoginResult{}, ErrInvalidCredentials
 		}
-		return LoginResult{}, fmt.Errorf("get user: %w", err)
+		return LoginResult{}, fmt.Errorf("store.GetUser: %w", err)
 	}
 
 	if err = comparePassword(user.PasswordHash, req.Password); err != nil {
@@ -44,7 +44,7 @@ func (s *Service) Login(ctx context.Context, req LoginParams) (LoginResult, erro
 
 	accessToken, err := s.token.BuildAccessToken(user.ID, s.tokenExpiration)
 	if err != nil {
-		return LoginResult{}, fmt.Errorf("build access token: %w", err)
+		return LoginResult{}, fmt.Errorf("token.BuildAccessToken: %w", err)
 	}
 
 	return LoginResult{AccessToken: accessToken}, nil

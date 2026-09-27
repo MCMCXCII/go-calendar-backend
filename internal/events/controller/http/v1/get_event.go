@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"project/pkg/render"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
@@ -21,23 +23,25 @@ type EventResponse struct {
 }
 
 func (v *V1) GetEvent(w http.ResponseWriter, r *http.Request) {
-	userID, ok := userIDFromContext(r.Context())
+	ctx := r.Context()
+
+	userID, ok := userIDFromContext(ctx)
 	if !ok {
-		writeJSON(w, http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		render.Error(ctx, w, ErrUnauthorized, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	eventID, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, ErrorResponse{Error: "invalid event id"})
+		render.Error(ctx, w, err, http.StatusBadRequest, "invalid event id")
 		return
 	}
 
-	event, err := v.uc.GetEvent(r.Context(), userID, eventID)
+	event, err := v.uc.GetEvent(ctx, userID, eventID)
 	if err != nil {
-		writeError(w, err)
+		writeError(ctx, w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toEventResponse(event))
+	render.JSON(w, toEventResponse(event), http.StatusOK)
 }

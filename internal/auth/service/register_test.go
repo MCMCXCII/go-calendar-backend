@@ -42,31 +42,6 @@ func TestService_Register_Success(t *testing.T) {
 	require.NotEqual(t, "password123", savedUser.PasswordHash)
 }
 
-func TestService_Register_EmptyEmail(t *testing.T) {
-	ctx := context.Background()
-
-	ctrl := gomock.NewController(t)
-	store := mocks.NewMockStore(ctrl)
-
-	svc := service.New(service.Params{Store: store})
-
-	_, err := svc.Register(ctx, service.RegisterParams{Email: "", Password: "password123"})
-
-	require.ErrorIs(t, err, service.ErrEmailEmpty)
-}
-
-func TestService_Register_EmptyPassword(t *testing.T) {
-	ctx := context.Background()
-
-	ctrl := gomock.NewController(t)
-	store := mocks.NewMockStore(ctrl)
-
-	svc := service.New(service.Params{Store: store})
-
-	_, err := svc.Register(ctx, service.RegisterParams{Email: "abc@inbox.ru", Password: ""})
-	require.ErrorIs(t, err, service.ErrPasswordEmpty)
-}
-
 func TestService_Register_EmailAlreadyExists(t *testing.T) {
 	ctx := context.Background()
 

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"project/internal/events/service"
+	"project/pkg/render"
 )
 
 type ListEventsResponse struct {
@@ -11,15 +12,17 @@ type ListEventsResponse struct {
 }
 
 func (v *V1) ListEvents(w http.ResponseWriter, r *http.Request) {
-	userID, ok := userIDFromContext(r.Context())
+	ctx := r.Context()
+
+	userID, ok := userIDFromContext(ctx)
 	if !ok {
-		writeJSON(w, http.StatusUnauthorized, ErrorResponse{Error: "unauthorized"})
+		render.Error(ctx, w, ErrUnauthorized, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	q := r.URL.Query()
 
-	events, err := v.uc.ListEvents(r.Context(), service.ListEventsParams{
+	events, err := v.uc.ListEvents(ctx, service.ListEventsParams{
 		UserID: userID,
 		Day:    q.Get("day"),
 		Week:   q.Get("week"),
@@ -28,7 +31,7 @@ func (v *V1) ListEvents(w http.ResponseWriter, r *http.Request) {
 		To:     q.Get("to"),
 	})
 	if err != nil {
-		writeError(w, err)
+		writeError(ctx, w, err)
 		return
 	}
 
@@ -37,5 +40,5 @@ func (v *V1) ListEvents(w http.ResponseWriter, r *http.Request) {
 		resp.Events = append(resp.Events, toEventResponse(e))
 	}
 
-	writeJSON(w, http.StatusOK, resp)
+	render.JSON(w, resp, http.StatusOK)
 }
